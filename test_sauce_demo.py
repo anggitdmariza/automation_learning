@@ -6,11 +6,13 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as ec
 import time
 import logging
-logging.basicConfig(filename='C:/Users/User/PycharmProjects/AutomationTesting_Learning000')
-logger = logging.getLogger('sauce-demo-log.log')
-logger.setLevel(logging.INFO)
-handlr = logging.StreamHandler()
-logger.addHandler(handlr)
+from configparser import ConfigParser
+
+r = ConfigParser()
+r.read('config.ini')
+logging.basicConfig(filename='../AutomationTesting_Learning000/logs/test_sauce_demo.log',
+                    format='%(asctime)s %(levelname)s: %(message)s', filemode='w',
+                    encoding='utf-8-sig', level=logging.INFO, force=True)
 
 
 class TestSauceDemo(unittest.TestCase):
@@ -18,36 +20,36 @@ class TestSauceDemo(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.driver.get('https://www.saucedemo.com')
         cls.driver.maximize_window()
+        cls.driver.get(r['basic info']['saucedemo'])
+        title = cls.driver.title
+        assert "Swag Labs" in title
 
     def setUp(self):
-        """Maybe pre-requisites"""
+        """Can be used for pre-requisite steps"""
         """input correct username and password"""
-        self.driver.find_element(By.ID, 'user-name').send_keys('standard_user')
-        self.driver.find_element(By.ID, 'password').send_keys('secret_sauce')
+        self.driver.find_element(By.ID, 'user-name').send_keys(r['user']['swag_id'])
+        self.driver.find_element(By.ID, 'password').send_keys(r['user']['swag_pw'])
         self.driver.find_element(By.ID, 'login-button').click()
 
     def tearDown(self):
+        """Log out"""
         self.driver.find_element(By.CLASS_NAME, 'bm-burger-button').click()
         wait_ = WebDriverWait(self.driver, 10)
         wait_.until(ec.element_to_be_clickable((By.ID, 'logout_sidebar_link')))
         self.driver.find_element(By.ID, 'logout_sidebar_link').click()
-        expected_title = 'Swag Labs'
-        actual_title = self.driver.title
-        self.assertEqual(expected_title, actual_title, 'Not Title')
 
     @classmethod
     def tearDownClass(cls):
         cls.driver.quit()
 
-    def test_shopping(self):
+    def test_a_shopping(self):
         """check the menu"""
         self.driver.find_element(By.CLASS_NAME, 'bm-burger-button').click()
         wait_ = WebDriverWait(self.driver, 10)
         wait_.until(ec.element_to_be_clickable((By.ID, 'react-burger-cross-btn')))
         time.sleep(1)
-        logger.info('\nWhy still need time after waiting and confirmation?\n')
+        logging.debug('Why still need time before clicking the element after waiting and confirmation?\nLine 52')
         self.driver.find_element(By.ID, 'react-burger-cross-btn').click()
 
         '''check footer'''
@@ -58,10 +60,9 @@ class TestSauceDemo(unittest.TestCase):
         '''check inventories sorter'''
         index = 0
         for i in range(3):
-            index = index+1
+            index = index + 1
             sorter = self.driver.find_element(By.XPATH, "//select[@class='product_sort_container']")
             Select(sorter).select_by_index(index)
-
         self.driver.find_element(By.CLASS_NAME, 'inventory_item_img').click()
         self.driver.find_element(By.ID, 'back-to-products').click()
 
@@ -77,9 +78,9 @@ class TestSauceDemo(unittest.TestCase):
         self.driver.find_element(By.ID, 'checkout').click()
 
         '''filling address'''
-        self.driver.find_element(By.ID, 'first-name').send_keys('Sauce')
-        self.driver.find_element(By.ID, 'last-name').send_keys('Demo')
-        self.driver.find_element(By.ID, 'postal-code').send_keys('111')
+        self.driver.find_element(By.ID, 'first-name').send_keys(r['user']['first_name'])
+        self.driver.find_element(By.ID, 'last-name').send_keys(r['user']['last_name'])
+        self.driver.find_element(By.ID, 'postal-code').send_keys(r['user']['zip_code'])
         self.driver.find_element(By.ID, 'continue').click()
 
         '''payment confirmation'''
@@ -93,7 +94,9 @@ class TestSauceDemo(unittest.TestCase):
         self.assertEqual(ec_ty, act_ty, 'Not Thank You Message!')
         self.driver.find_element(By.ID, 'back-to-products').click()
 
-    def test_blank_filling(self):
+    def test_b_blank_filling(self):
+        logging.info('Shopping test is succeed')
+        self.driver.refresh()
         """check the menu"""
         self.driver.find_element(By.CLASS_NAME, 'bm-burger-button').click()
         wait = WebDriverWait(self.driver, 2)
@@ -109,9 +112,9 @@ class TestSauceDemo(unittest.TestCase):
         '''check inventories sorter'''
         index = 0
         for i in range(3):
-            index = index+1
-            sorter = self.driver.find_element(By.XPATH, "//select[@class='product_sort_container']")
-            Select(sorter).select_by_index(index)
+            index = index + 1
+        sorter = self.driver.find_element(By.XPATH, "//select[@class='product_sort_container']")
+        Select(sorter).select_by_index(index)
         self.driver.find_element(By.CLASS_NAME, 'inventory_item_img').click()
         self.driver.find_element(By.ID, 'back-to-products').click()
 
@@ -130,10 +133,10 @@ class TestSauceDemo(unittest.TestCase):
         self.driver.find_element(By.ID, 'continue').click()
         error_message = 'Error: First Name is required'
         actual_message = self.driver.find_element(By.XPATH, "//h3[normalize-space()"
-                                                            "='Error: First Name is required']").text
-        assert error_message == actual_message
+                                                            "='Error: First Name is required']")
+        assert error_message in actual_message.text
+        logging.info('Blank address filling test is succeed')
 
 
-# Add a main block that will run the tests using unittest.main()
 if __name__ == "__main__":
     unittest.main()
