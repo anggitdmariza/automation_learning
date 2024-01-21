@@ -10,19 +10,19 @@ from configparser import ConfigParser
 
 r = ConfigParser()
 r.read('config.ini')
-logging.basicConfig(filename='../AutomationTesting_Learning000/logs/test_sauce_demo.log',
+logging.basicConfig(filename='../AutomationTesting_Learning000/logs/test_demoblaze.log',
                     format='%(asctime)s %(levelname)s: %(message)s', filemode='w',
                     encoding='utf-8-sig', level=logging.INFO, force=True)
 
 
-class TestSauceDemo(unittest.TestCase):
+class TestDemoblaze(unittest.TestCase):
     driver = webdriver.Firefox()
 
     @classmethod
     def setUpClass(cls):
         """Open webpage"""
         cls.driver.maximize_window()
-        cls.driver.get('')
+        cls.driver.get(r['url']['demoblaze'])
 
     def setUp(self):
         """Verifiying Elements on Homepage"""
@@ -40,19 +40,11 @@ class TestSauceDemo(unittest.TestCase):
     def test_login(self):
         """Login"""
         self.driver.find_element(By.XPATH, '//*[@id="login2"]').click()
-        self.driver.find_element(By.ID, 'loginusername').send_keys(r['user']['blaze_id'])
-        self.driver.find_element(By.ID, 'loginpassword').send_keys(r['user']['blaze_pw'])
-        self.driver.find_element(By.XPATH, '//*[@id="logInModal"]/div/div/div[3]/button[2]').click()
+        self.driver.find_element(By.ID, "loginusername").send_keys(r['user']['blaze_id'])
+        self.driver.find_element(By.ID, "loginpassword").send_keys(r['user']['blaze_pw'])
+        self.driver.find_element(By.ID, "logInModal").click()
         """Verify Footer"""
-        try:
-            copyright_footer = self.driver.find_element(By.CSS_SELECTOR, '.py-5.bg-inverse').text
-            assert 'Copyright © Product Store 2017' in copyright_footer
-            logging.info('The Copyright © Product Store 2017\n')
-            logging.warning("It's almost seven years! \n")
-            logging.error("Why not updating?\n")
-            logging.critical("Does it have expiration?\n")
-        except AssertionError:
-            logging.warning("\nCopyright Not Found\n")
+        self.driver.find_element(By.CSS_SELECTOR, '.py-5.bg-inverse').is_displayed()
 
 
 if __name__ == "__main__":
